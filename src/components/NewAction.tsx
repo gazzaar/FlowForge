@@ -2,6 +2,7 @@ import { Box, TextField } from '@mui/material';
 
 import AddIcon from '@mui/icons-material/Add';
 
+// TODO: What's the type of set State? the functions
 const NewAction = ({
   handleNewNode,
   error,

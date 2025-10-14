@@ -1,23 +1,24 @@
-import { Box, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import { useState } from 'react';
 import { useDnD } from '@/DnDContext';
 import ActionsList from '@/components/ActionList';
-import { customNnodes } from '@/nodes';
 import NewAction from '@/components/NewAction';
 import { v4 as uuidv4 } from 'uuid';
+import{type Node}from '@xyflow/react'
+import { type Node as NodeInput } from '@/types'; 
 
 export default function SideBar() {
-  const [nodeValue, setNodeValue] = useState('');
-  const [_, setType] = useDnD();
+  const [_, setName] = useDnD();
   const [inputValue, setInputValue] = useState('');
-  const [nodes, setNodes] = useState(customNnodes);
+  const [nodes, setNodes] = useState<NodeInput[]>([]);
   const [error, setError] = useState('');
 
-  const onDragStart = (event: DragEvent, nodeType) => {
-    setType(nodeType);
+  const onDragStart = (event, nodeType: Node) => {
+    setName(nodeType);
     event.dataTransfer.effectAllowed = 'move';
   };
 
+  // TODO: Refactor this
   const handleNewNode = () => {
     if (!inputValue.trim()) {
       setInputValue('');
@@ -32,11 +33,10 @@ export default function SideBar() {
     setNodes((prevNodes) => {
       return [...prevNodes, newNode];
     });
-    customNnodes.push(newNode);
     setInputValue('');
   };
 
-  const handleDeleteNode = (id: number) => {
+  const handleDeleteNode = (id: string) => {
     setNodes((prevNodes) => {
       return prevNodes.filter((node) => node.id !== id);
     });
@@ -52,10 +52,6 @@ export default function SideBar() {
 
   return (
     <Stack sx={{ padding: '12px', height: '100%' }}>
-      <Box component={'h3'} sx={{}}>
-        Component Library
-      </Box>
-
       <NewAction
         handleNewNode={handleNewNode}
         error={error}

@@ -4,13 +4,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
+import { type Node } from '@/types';
 const ActionsList = ({
   nodes,
   onDragHandle,
   handleDeleteNode,
 }: {
-  nodes: any;
-  onDragHandleNode: DragEvent;
+  nodes: Node[];
 }) => {
   return (
     <Box sx={{ mt: '12px' }}>

@@ -5,6 +5,7 @@ import {
   ReactFlowProvider,
   addEdge,
   useEdgesState,
+  getOutgoers,
   useNodesState,
   useReactFlow,
 } from '@xyflow/react';
@@ -47,7 +48,7 @@ const DnDFlow = () => {
   const reactFlowWrapper = useRef(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, getEdges, getNodes } = useReactFlow();
   const [type] = useDnD();
 
   const onConnect = useCallback(
@@ -88,11 +89,27 @@ const DnDFlow = () => {
     [screenToFlowPosition, type],
   );
 
-  const onDragStart = (event: DragEvent, nodeType) => {
-    setType(nodeType);
-    event.dataTransfer.setData('text/plain', nodeType);
-    event.dataTransfer.effectAllowed = 'move';
-  };
+  const isValidConnection = useCallback(
+    (connection) => {
+      const nodes = getNodes();
+      const edges = getEdges();
+      const target = nodes.find((node) => node.id === connection.target);
+      const hasCycle = (node: Node, visited = new Set()) => {
+        if (visited.has(node.id)) return false;
+
+        visited.add(node.id);
+
+        for (const outgoer of getOutgoers(node, nodes, edges)) {
+          if (outgoer.id === connection.source) return true;
+          if (hasCycle(outgoer, visited)) return true;
+        }
+      };
+
+      if (target.id === connection.source) return false;
+      return !hasCycle(target);
+    },
+    [getNodes, getEdges],
+  );
 
   return (
     <ThemeProvider theme={theme}>
@@ -139,7 +156,7 @@ const DnDFlow = () => {
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 onDrop={onDrop}
-                onDragStart={onDragStart}
+                isValidConnection={isValidConnection}
                 onDragOver={onDragOver}
                 fitView
               >

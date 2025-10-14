@@ -1,17 +1,21 @@
+import { type Node } from '@/types';
+import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box, Typography } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
-import { type Node } from '@/types';
+type ActionsListProps = {
+  nodes: Node[];
+  onDragHandle: (event: React.DragEvent, nodeType: string) => void;
+  handleDeleteNode: (id: string) => void;
+};
+
 const ActionsList = ({
   nodes,
   onDragHandle,
   handleDeleteNode,
-}: {
-  nodes: Node[];
-}) => {
+}: ActionsListProps) => {
   return (
     <Box sx={{ mt: '12px' }}>
       <Accordion
@@ -44,7 +48,7 @@ const ActionsList = ({
               justifyContent: 'space-between',
             }}
           >
-            <Typography variant='subtitle1'> {node.name}</Typography>
+            <Typography variant="subtitle1"> {node.name}</Typography>
             <DeleteIcon
               onClick={() => handleDeleteNode(node.id)}
               sx={{ color: '#AF2426' }}

@@ -1,26 +1,28 @@
-import {
-  Background,
-  Controls,
-  ReactFlow,
-  ReactFlowProvider,
-  MiniMap,
-  Panel,
-  addEdge,
-  useEdgesState,
-  getOutgoers,
-  useNodesState,
-  useReactFlow,
-  type Node,
-  type Edge,
-  type OnConnect,
-} from "@xyflow/react";
-import { useEffect, useState, useCallback, useRef } from "react";
-import "@xyflow/react/dist/style.css";
-import { Box, Container, CssBaseline, Grid, Typography } from "@mui/material";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { DnDProvider, useDnD } from "@/DnDContext";
 import Sidebar from "@/SideBar.tsx";
 import StoreButton from "@/components/StoreButton";
+import { Box, Container, CssBaseline, Grid, Typography } from "@mui/material";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import {
+  Background,
+  Controls,
+  MiniMap,
+  Panel,
+  ReactFlow,
+  ReactFlowProvider,
+  addEdge,
+  getOutgoers,
+  useEdgesState,
+  useNodesState,
+  useReactFlow,
+  type Connection,
+  type Edge,
+  type Node,
+  type OnConnect,
+  type ReactFlowInstance,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const theme = createTheme({
   palette: {
@@ -36,10 +38,13 @@ const flowKey = "react-flow";
 
 const DnDFlow = () => {
   const reactFlowWrapper = useRef(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
-  const [rfInstance, setRfInstance] = useState(null);
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance<
+    Node,
+    Edge
+  > | null>(null);
   const { screenToFlowPosition, setViewport, getEdges, getNodes } =
     useReactFlow();
   const [name] = useDnD();
@@ -54,12 +59,13 @@ const DnDFlow = () => {
       const flow = rfInstance.toObject();
       localStorage.setItem(flowKey, JSON.stringify(flow));
     }
-  });
+  }, [rfInstance]);
 
   const onRestore = useCallback(() => {
     const restoreFlow = async () => {
-      const flow = JSON.parse(localStorage.getItem(flowKey));
-
+      const raw = localStorage.getItem(flowKey);
+      if (!raw) return;
+      const flow = JSON.parse(raw);
       if (flow) {
         const { x = 0, y = 0, zoom = 1 } = flow.viewport;
         setNodes(flow.nodes || []);
@@ -69,15 +75,15 @@ const DnDFlow = () => {
     };
 
     restoreFlow();
-  }, [setNodes, setViewport]);
+  }, [setNodes, setEdges, setViewport]);
 
-  const onDragOver = useCallback((event) => {
+  const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
   const onDrop = useCallback(
-    (event) => {
+    (event: React.DragEvent) => {
       event.preventDefault();
 
       if (!name) {
@@ -102,7 +108,7 @@ const DnDFlow = () => {
   );
 
   const isValidConnection = useCallback(
-    (connection) => {
+    (connection: Connection) => {
       const nodes = getNodes();
       const edges = getEdges();
       const target = nodes.find((node) => node.id === connection.target);
@@ -116,7 +122,7 @@ const DnDFlow = () => {
           if (hasCycle(outgoer, visited)) return true;
         }
       };
-
+      if (!target) return false;
       if (target.id === connection.source) return false;
       return !hasCycle(target);
     },
@@ -127,10 +133,19 @@ const DnDFlow = () => {
     onRestore();
   }, []);
 
+  // WARN: to many effetcs
+  // useEffect(() => {
+  //   try {
+  //     const viewport = rfInstance ? rfInstance.toObject().viewport : undefined;
+  //     const flow = { nodes, edges, viewport };
+  //     localStorage.setItem(flowKey, JSON.stringify(flow));
+  //   } catch (_) {}
+  // }, [nodes, edges, rfInstance]);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container maxWidth="1242px" sx={{ height: "100vh" }}>
+      <Container maxWidth="xl" sx={{ height: "100vh", px: { xs: 1, sm: 2 } }}>
         <Grid
           container
           sx={{
@@ -140,21 +155,24 @@ const DnDFlow = () => {
           }}
         >
           <Grid
-            size={2}
+            size={{ xs: 12, sm: 4, md: 3 }}
             sx={{
               backgroundColor: "#F9FBFC",
               borderRight: "1px solid #E5E7E9",
+              borderRightColor: { xs: "transparent", sm: "#E5E7E9" },
+              borderBottom: { xs: "1px solid #E5E7E9", sm: "none" },
             }}
           >
             <Sidebar />
           </Grid>
-          <Grid size={10} sx={{ height: "100%" }}>
+          <Grid size={{ xs: 12, sm: 8, md: 9 }} sx={{ height: "100%" }}>
             <Box
               sx={{
                 height: "5%",
                 borderBottom: "1px solid #E5E7E9",
                 display: "flex",
                 alignItems: "center",
+                px: { xs: 1, sm: 2 },
               }}
             >
               <Typography variant="h6" sx={{ pl: "12px", fontWeight: "bold" }}>
@@ -163,7 +181,10 @@ const DnDFlow = () => {
             </Box>
             <Box
               ref={reactFlowWrapper}
-              sx={{ height: "95%", bgcolor: "white" }}
+              sx={{
+                height: { xs: "calc(100% - 48px)", sm: "95%" },
+                bgcolor: "white",
+              }}
             >
               <ReactFlow
                 nodes={nodes}
@@ -172,8 +193,10 @@ const DnDFlow = () => {
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 onDrop={onDrop}
-                onInit={setRfInstance}
-                isValidConnection={isValidConnection}
+                onInit={(instance) => setRfInstance(instance)}
+                isValidConnection={(conn) =>
+                  isValidConnection(conn as Connection)
+                }
                 onDragOver={onDragOver}
                 fitView
               >
@@ -188,6 +211,16 @@ const DnDFlow = () => {
                 >
                   <StoreButton onAction={onSave} actionName="Save" />
                   <StoreButton onAction={onRestore} actionName="Restore" />
+                  <StoreButton
+                    onAction={() => {
+                      setNodes([]);
+                      setEdges([]);
+                      try {
+                        localStorage.removeItem(flowKey);
+                      } catch (_) {}
+                    }}
+                    actionName="Clear"
+                  />
                 </Panel>
                 <MiniMap />
               </ReactFlow>

@@ -1,11 +1,11 @@
-import { Stack } from '@mui/material';
-import { useState } from 'react';
 import { useDnD } from '@/DnDContext';
 import ActionsList from '@/components/ActionList';
 import NewAction from '@/components/NewAction';
+import { type Node as NodeInput } from '@/types';
+import { Stack } from '@mui/material';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import{type Node}from '@xyflow/react'
-import { type Node as NodeInput } from '@/types'; 
 
 export default function SideBar() {
   const [_, setName] = useDnD();
@@ -13,7 +13,21 @@ export default function SideBar() {
   const [nodes, setNodes] = useState<NodeInput[]>([]);
   const [error, setError] = useState('');
 
-  const onDragStart = (event, nodeType: Node) => {
+  // localStorage key for sidebar action templates
+  const sidebarKey = 'ff-sidebar-actions';
+
+  // load actions from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(sidebarKey);
+      if (saved) {
+        const parsed = JSON.parse(saved) as NodeInput[];
+        setNodes(parsed);
+      }
+    } catch (_) {}
+  }, []);
+
+  const onDragStart = (event: React.DragEvent, nodeType: string) => {
     setName(nodeType);
     event.dataTransfer.effectAllowed = 'move';
   };
@@ -31,16 +45,23 @@ export default function SideBar() {
       name: inputValue,
     };
     setNodes((prevNodes) => {
-      return [...prevNodes, newNode];
+      const next = [...prevNodes, newNode];
+      try {
+        localStorage.setItem(sidebarKey, JSON.stringify(next));
+      } catch (_) {}
+      return next;
     });
     setInputValue('');
   };
 
   const handleDeleteNode = (id: string) => {
     setNodes((prevNodes) => {
-      return prevNodes.filter((node) => node.id !== id);
+      const next = prevNodes.filter((node) => node.id !== id);
+      try {
+        localStorage.setItem(sidebarKey, JSON.stringify(next));
+      } catch (_) {}
+      return next;
     });
-    nodes.filter((node) => node.id !== id);
   };
 
   const handleEnterPress = (e: React.KeyboardEvent<HTMLDivElement>) => {

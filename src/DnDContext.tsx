@@ -1,9 +1,18 @@
-import { createContext, useContext, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
 
-const DnDContext = createContext([null, (_) => {}]);
+type DnDValue = [string | null, Dispatch<SetStateAction<string | null>>];
 
-export const DnDProvider = ({ children }) => {
-  const [name, setName] = useState(null);
+const DnDContext = createContext<DnDValue>([null, () => {}]);
+
+export const DnDProvider = ({ children }: { children: ReactNode }) => {
+  const [name, setName] = useState<string | null>(null);
 
   return <DnDContext value={[name, setName]}>{children}</DnDContext>;
 };

@@ -11,7 +11,9 @@ import {
   ReactFlow,
   ReactFlowProvider,
   addEdge,
+  getNodesBounds,
   getOutgoers,
+  getViewportForBounds,
   useEdgesState,
   useNodesState,
   useReactFlow,
@@ -22,6 +24,7 @@ import {
   type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const theme = createTheme({
@@ -35,6 +38,17 @@ const theme = createTheme({
 let id = 0;
 const getId = () => `dndnode_${id++}`;
 const flowKey = "react-flow";
+
+function downloadImage(dataUrl) {
+  const a = document.createElement("a");
+
+  a.setAttribute("download", "flow.png");
+  a.setAttribute("href", dataUrl);
+  a.click();
+}
+
+const imageWidth = 1024;
+const imageHeight = 768;
 
 const DnDFlow = () => {
   const reactFlowWrapper = useRef(null);
@@ -133,14 +147,28 @@ const DnDFlow = () => {
     onRestore();
   }, []);
 
-  // WARN: to many effetcs
-  // useEffect(() => {
-  //   try {
-  //     const viewport = rfInstance ? rfInstance.toObject().viewport : undefined;
-  //     const flow = { nodes, edges, viewport };
-  //     localStorage.setItem(flowKey, JSON.stringify(flow));
-  //   } catch (_) {}
-  // }, [nodes, edges, rfInstance]);
+  const onDownload = () => {
+    const nodesBounds = getNodesBounds(getNodes());
+    const viewport = getViewportForBounds(
+      nodesBounds,
+      imageWidth,
+      imageHeight,
+      0.5,
+      2,
+    );
+
+    toPng(document.querySelector(".react-flow__viewport"), {
+      backgroundColor: "transparent",
+      width: imageWidth,
+      height: imageHeight,
+      pixelRatio: 2,
+      style: {
+        width: imageWidth,
+        height: imageHeight,
+        transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
+      },
+    }).then(downloadImage);
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -155,7 +183,7 @@ const DnDFlow = () => {
           }}
         >
           <Grid
-            size={{ xs: 12, sm: 4, md: 3 }}
+            size={{ xs: 12, sm: 4, md: 2 }}
             sx={{
               backgroundColor: "#F9FBFC",
               borderRight: "1px solid #E5E7E9",
@@ -165,7 +193,7 @@ const DnDFlow = () => {
           >
             <Sidebar />
           </Grid>
-          <Grid size={{ xs: 12, sm: 8, md: 9 }} sx={{ height: "100%" }}>
+          <Grid size={{ xs: 12, sm: 8, md: 10 }} sx={{ height: "100%" }}>
             <Box
               sx={{
                 height: "5%",
@@ -220,6 +248,10 @@ const DnDFlow = () => {
                       } catch (_) {}
                     }}
                     actionName="Clear"
+                  />
+                  <StoreButton
+                    onAction={onDownload}
+                    actionName="Download an Image"
                   />
                 </Panel>
                 <MiniMap />

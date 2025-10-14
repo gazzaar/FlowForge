@@ -1,20 +1,20 @@
-import { useDnD } from '@/DnDContext';
-import ActionsList from '@/components/ActionList';
-import NewAction from '@/components/NewAction';
-import { type Node as NodeInput } from '@/types';
-import { Stack } from '@mui/material';
-import type React from 'react';
-import { useEffect, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { useDnD } from "@/DnDContext";
+import ActionsList from "@/components/ActionList";
+import NewAction from "@/components/NewAction";
+import { type Node as NodeInput } from "@/types";
+import { Stack } from "@mui/material";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 export default function SideBar() {
   const [_, setName] = useDnD();
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState<string>("");
   const [nodes, setNodes] = useState<NodeInput[]>([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // localStorage key for sidebar action templates
-  const sidebarKey = 'ff-sidebar-actions';
+  const sidebarKey = "ff-sidebar-actions";
 
   // load actions from localStorage
   useEffect(() => {
@@ -29,17 +29,17 @@ export default function SideBar() {
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     setName(nodeType);
-    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.effectAllowed = "move";
   };
 
   // TODO: Refactor this
   const handleNewNode = () => {
     if (!inputValue.trim()) {
-      setInputValue('');
-      setError('Please Enter a valid value');
+      setInputValue("");
+      setError("Please Enter a valid value");
       return;
     }
-    setError('');
+    setError("");
     const newNode = {
       id: uuidv4(),
       name: inputValue,
@@ -51,7 +51,7 @@ export default function SideBar() {
       } catch (_) {}
       return next;
     });
-    setInputValue('');
+    setInputValue("");
   };
 
   const handleDeleteNode = (id: string) => {
@@ -65,14 +65,14 @@ export default function SideBar() {
   };
 
   const handleEnterPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleNewNode();
     }
   };
 
   return (
-    <Stack sx={{ padding: '12px', height: '100%' }}>
+    <Stack sx={{ padding: "12px", height: "100%" }}>
       <NewAction
         handleNewNode={handleNewNode}
         error={error}

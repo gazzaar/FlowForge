@@ -39,7 +39,7 @@ let id = 0;
 const getId = () => `dndnode_${id++}`;
 const flowKey = "react-flow";
 
-function downloadImage(dataUrl) {
+function downloadImage(dataUrl: string) {
   const a = document.createElement("a");
 
   a.setAttribute("download", "flow.png");
@@ -61,6 +61,7 @@ const DnDFlow = () => {
   > | null>(null);
   const { screenToFlowPosition, setViewport, getEdges, getNodes } =
     useReactFlow();
+  const flowRef = useRef<HTMLDivElement | null>(null);
   const [name] = useDnD();
 
   const onConnect: OnConnect = useCallback(
@@ -148,6 +149,11 @@ const DnDFlow = () => {
   }, []);
 
   const onDownload = () => {
+    const flowElement =
+      flowRef.current || document.querySelector(".react-flow");
+
+    if (!flowElement) return;
+
     const nodesBounds = getNodesBounds(getNodes());
     const viewport = getViewportForBounds(
       nodesBounds,
@@ -155,16 +161,17 @@ const DnDFlow = () => {
       imageHeight,
       0.5,
       2,
+      0,
     );
 
-    toPng(document.querySelector(".react-flow__viewport"), {
+    toPng(flowElement, {
       backgroundColor: "transparent",
       width: imageWidth,
       height: imageHeight,
       pixelRatio: 2,
       style: {
-        width: imageWidth,
-        height: imageHeight,
+        width: String(imageWidth),
+        height: String(imageHeight),
         transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
       },
     }).then(downloadImage);

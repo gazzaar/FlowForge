@@ -26,6 +26,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 const theme = createTheme({
   palette: {
@@ -54,6 +55,7 @@ const DnDFlow = () => {
   const reactFlowWrapper = useRef(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const lastConnectionRef = useRef<string | null>(null);
 
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance<
     Node,
@@ -127,6 +129,9 @@ const DnDFlow = () => {
       const nodes = getNodes();
       const edges = getEdges();
       const target = nodes.find((node) => node.id === connection.target);
+
+      const connectionKey = `${connection.source}-${connection.target}`;
+
       const hasCycle = (node: Node, visited = new Set()) => {
         if (visited.has(node.id)) return false;
 
@@ -136,10 +141,30 @@ const DnDFlow = () => {
           if (outgoer.id === connection.source) return true;
           if (hasCycle(outgoer, visited)) return true;
         }
+        return false;
       };
+
       if (!target) return false;
-      if (target.id === connection.source) return false;
-      return !hasCycle(target);
+
+      if (target.id === connection.source) {
+        if (lastConnectionRef.current !== connectionKey) {
+          toast.error("You can't connect the same node");
+          lastConnectionRef.current = connectionKey;
+        }
+        return false;
+      }
+
+      const wouldCreateCycle = hasCycle(target);
+      if (wouldCreateCycle) {
+        if (lastConnectionRef.current !== connectionKey) {
+          toast.error("This connection would create a cycle in the flow");
+          lastConnectionRef.current = connectionKey;
+        }
+        return false;
+      }
+
+      lastConnectionRef.current = null;
+      return true;
     },
     [getNodes, getEdges],
   );
@@ -181,6 +206,9 @@ const DnDFlow = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Container maxWidth="xl" sx={{ height: "100vh", px: { xs: 1, sm: 2 } }}>
+        <div>
+          <Toaster />
+        </div>
         <Grid
           container
           sx={{

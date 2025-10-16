@@ -1,8 +1,19 @@
 import { memo } from "react";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
 import { Box, TextareaAutosize, Typography } from "@mui/material";
+import React from "react";
 
-const CustomNode = ({ id, data }) => {
+type CustomNodeData = {
+  label: string;
+  text?: string;
+};
+
+type Props = {
+  id: string;
+  data: CustomNodeData;
+};
+
+const CustomNode: React.FC<Props> = ({ id, data }) => {
   const { updateNodeData } = useReactFlow();
   return (
     <Box>

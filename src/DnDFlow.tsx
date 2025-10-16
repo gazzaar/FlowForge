@@ -10,7 +10,6 @@ import {
   Panel,
   ReactFlow,
   addEdge,
-  getNodesBounds,
   getOutgoers,
   getViewportForBounds,
   useEdgesState,
@@ -21,6 +20,9 @@ import {
   type Node,
   type OnConnect,
   type ReactFlowInstance,
+  BackgroundVariant,
+  BezierEdge,
+  MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { toPng } from "html-to-image";
@@ -29,6 +31,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { downloadImage } from "@/utils/downloadImage";
 import { FLOW_KEY, IMAGE_WIDTH, IMAGE_HEIGHT } from "@/config";
 import { v4 as uuidv4 } from "uuid";
+import CustomNode from "@/components/CustomNode";
 
 const theme = createTheme({
   palette: {
@@ -40,6 +43,21 @@ const theme = createTheme({
 
 export const getId = () => `dndnode_${uuidv4()}`;
 
+const nodeTypes = {
+  custom: CustomNode,
+};
+
+const edgeType = {
+  default: BezierEdge,
+};
+
+const defaultEdgeOptions = {
+  style: {
+    stroke: "#BABABF",
+  },
+};
+
+const defaultViewport = { x: 0, y: 0, zoom: 1.5 };
 const DnDFlow = () => {
   const reactFlowWrapper = useRef(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -50,13 +68,21 @@ const DnDFlow = () => {
     Node,
     Edge
   > | null>(null);
-  const { screenToFlowPosition, setViewport, getEdges, getNodes } =
-    useReactFlow();
+  const {
+    screenToFlowPosition,
+    setViewport,
+    getEdges,
+    getNodes,
+    getNodesBounds,
+  } = useReactFlow();
   const flowRef = useRef<HTMLDivElement | null>(null);
   const [name] = useDnD();
 
   const onConnect: OnConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
+    (params) =>
+      setEdges((eds) =>
+        addEdge({ ...params, markerEnd: { type: MarkerType.Arrow } }, eds),
+      ),
     [setEdges],
   );
 
@@ -103,7 +129,7 @@ const DnDFlow = () => {
 
       const newNode: Node = {
         id: getId(),
-        type: "default",
+        type: "custom",
         position,
         data: { label: `${name}` },
       };
@@ -180,39 +206,12 @@ const DnDFlow = () => {
 
     toPng(flowElement, {
       backgroundColor: "transparent",
-      width: IMAGE_HEIGHT,
+      width: IMAGE_WIDTH,
       height: IMAGE_HEIGHT,
-      pixelRatio: 2,
       style: {
         width: String(IMAGE_WIDTH),
         height: String(IMAGE_HEIGHT),
         transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
-      },
-    }).then(downloadImage);
-
-    const flow = document.querySelector(".react-flow__viewport");
-    if (!flow) return;
-
-    const nodes = getNodes();
-    const bounds = getNodesBounds(nodes);
-
-    // Add padding to ensure edges and labels aren’t cut off
-    const padding = 50;
-
-    const x = bounds.x - padding;
-    const y = bounds.y - padding;
-    const width = bounds.width + padding * 2;
-    const height = bounds.height + padding * 2;
-
-    toPng(flow, {
-      backgroundColor: "#ffffff", // or transparent
-      width,
-      height,
-      pixelRatio: 2,
-      style: {
-        transform: `translate(${-x}px, ${-y}px)`, // shift so flow starts at (0,0)
-        width: `${width}px`,
-        height: `${height}px`,
       },
     }).then(downloadImage);
   };
@@ -274,15 +273,19 @@ const DnDFlow = () => {
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 onDrop={onDrop}
+                defaultEdgeOptions={defaultEdgeOptions}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeType}
                 onInit={(instance) => setRfInstance(instance)}
                 isValidConnection={(conn) =>
                   isValidConnection(conn as Connection)
                 }
                 onDragOver={onDragOver}
                 fitView
+                defaultViewport={defaultViewport}
               >
                 <Controls />
-                <Background />
+                <Background variant={BackgroundVariant.Dots} />
                 <Panel
                   position="top-right"
                   style={{

@@ -1,10 +1,10 @@
 import { type Node } from "@/types";
-import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Typography } from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
+import RemoveIcon from "@mui/icons-material/Remove";
 type ActionsListProps = {
   nodes: Node[];
   onDragHandle: (event: React.DragEvent, nodeType: string) => void;
@@ -46,12 +46,13 @@ const ActionsList = ({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              cursor: "grab",
             }}
           >
             <Typography variant="subtitle1"> {node.name}</Typography>
-            <DeleteIcon
+            <RemoveIcon
               onClick={() => handleDeleteNode(node.id)}
-              sx={{ color: "#AF2426" }}
+              sx={{ color: "#AF2426", cursor: "pointer" }}
             />
           </AccordionDetails>
         ))}

@@ -205,7 +205,7 @@ const DnDFlow = () => {
     );
 
     toPng(flowElement, {
-      backgroundColor: "transparent",
+      backgroundColor: "#ffffff",
       width: IMAGE_WIDTH,
       height: IMAGE_HEIGHT,
       style: {

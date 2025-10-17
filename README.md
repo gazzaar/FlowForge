@@ -48,5 +48,4 @@ src/
 - **React Flow** - Powerful flow diagram library
 - **Material-UI** - Modern component library
 - **Vite** - Fast build tool and dev server
-- **DnD Kit** - Drag and drop functionality
 - **React Hot Toast** - User notifications

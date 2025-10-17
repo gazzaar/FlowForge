@@ -49,7 +49,17 @@ const ActionsList = ({
               cursor: "grab",
             }}
           >
-            <Typography variant="subtitle1"> {node.name}</Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                maxWidth: "80%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {node.name}
+            </Typography>
             <RemoveIcon
               onClick={() => handleDeleteNode(node.id)}
               sx={{ color: "#AF2426", cursor: "pointer" }}

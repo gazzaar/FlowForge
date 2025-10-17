@@ -17,10 +17,7 @@ const CustomNode: React.FC<Props> = ({ id, data }) => {
   const { updateNodeData } = useReactFlow();
   return (
     <Box>
-      <Typography
-        variant="subtitle1"
-        sx={{ fontSize: "22px", textTransform: "capitalize" }}
-      >
+      <Typography variant="subtitle2" sx={{ textTransform: "capitalize" }}>
         {data.label}{" "}
       </Typography>
       <TextareaAutosize
@@ -30,9 +27,11 @@ const CustomNode: React.FC<Props> = ({ id, data }) => {
         minRows={2}
         placeholder="Type your thoughts here..."
         style={{
-          width: "200px",
-          resize: "vertical",
-          maxHeight: "200px",
+          maxWidth: "100%",
+          minWidth: "150px",
+          resize: "none",
+          maxHeight: "auto",
+          overflow: "none",
           outline: "none",
           border: "none",
           fontSize: "10px",
